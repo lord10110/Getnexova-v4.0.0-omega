@@ -1,0 +1,20 @@
+name: Reporter
+version: "1.0.0"
+description: "Generates professional vulnerability reports for bug bounty platform submission"
+role: "report_writer"
+model_preferences:
+  - "groq/llama-3.1-70b-versatile"
+  - "gemini/gemini-2.0-flash"
+skills:
+  - "report_generation"
+  - "executive_summary"
+  - "remediation_advice"
+  - "poc_documentation"
+tools: []
+parameters:
+  formats:
+    - "html"
+    - "markdown"
+    - "json"
+  include_poc: true
+  max_findings_per_report: 50

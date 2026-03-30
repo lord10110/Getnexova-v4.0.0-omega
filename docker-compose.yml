@@ -1,0 +1,79 @@
+# ════════════════════════════════════════════════════════════
+# GetNexova v4.0.0 OMEGA — Docker Compose (Microservices)
+# ════════════════════════════════════════════════════════════
+# Usage:
+#   docker compose -f docker-compose.yml up -d
+#   docker compose -f docker-compose.yml run nexova -t target.com --mode deep
+# ════════════════════════════════════════════════════════════
+
+version: "3.9"
+
+networks:
+  getnexova-net:
+    driver: bridge
+
+volumes:
+  nexova-data:
+  nexova-reports:
+
+services:
+  # ─── Main GetNexova Engine ────────────────────────────────
+  nexova:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: getnexova-engine
+    networks:
+      - getnexova-net
+    volumes:
+      - nexova-data:/app/data
+      - nexova-reports:/app/reports
+      - ./logs:/app/logs
+    environment:
+      - GROQ_API_KEY=${GROQ_API_KEY:-}
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      - OLLAMA_BASE_URL=${OLLAMA_BASE_URL:-http://ollama:11434}
+      - DISCORD_WEBHOOK=${DISCORD_WEBHOOK:-}
+      - SLACK_WEBHOOK=${SLACK_WEBHOOK:-}
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN:-}
+      - TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID:-}
+      - MAX_COST_PER_RUN=${MAX_COST_PER_RUN:-5.0}
+      - ADVANCED_TOOLS_URL=http://advanced-tools:5050
+      - ADVANCED_TOOLS_ENABLED=true
+    depends_on:
+      advanced-tools:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # ─── Advanced Tools Container ─────────────────────────────
+  advanced-tools:
+    build:
+      context: .
+      dockerfile: integrations/Dockerfile.advanced
+    container_name: getnexova-advanced-tools
+    networks:
+      - getnexova-net
+    expose:
+      - "5050"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5050/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    restart: unless-stopped
+
+  # ─── Ollama Local LLM (Optional) ─────────────────────────
+  ollama:
+    image: ollama/ollama:latest
+    container_name: getnexova-ollama
+    networks:
+      - getnexova-net
+    volumes:
+      - ~/.ollama:/root/.ollama
+    expose:
+      - "11434"
+    profiles:
+      - local-llm
+    restart: unless-stopped

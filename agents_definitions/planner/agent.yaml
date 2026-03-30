@@ -1,0 +1,21 @@
+name: Planner
+version: "1.0.0"
+description: "Creates optimized recon and scanning plans based on target characteristics and available tools"
+role: "reconnaissance_planner"
+model_preferences:
+  - "groq/llama-3.1-70b-versatile"
+  - "gemini/gemini-2.0-flash"
+skills:
+  - "target_analysis"
+  - "tool_selection"
+  - "phase_ordering"
+  - "time_estimation"
+tools:
+  - "subfinder"
+  - "httpx"
+  - "nmap"
+  - "dnsrecon"
+parameters:
+  max_phases: 10
+  consider_dependencies: true
+  optimize_for: "coverage"

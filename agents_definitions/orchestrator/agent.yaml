@@ -1,0 +1,16 @@
+name: Orchestrator
+version: "1.0.0"
+description: "Master coordinator that manages the entire scan pipeline, dispatches work to agents, and handles errors"
+role: "pipeline_coordinator"
+model_preferences:
+  - "groq/llama-3.1-70b-versatile"
+skills:
+  - "pipeline_management"
+  - "error_recovery"
+  - "agent_coordination"
+  - "progress_tracking"
+tools: []
+parameters:
+  max_pipeline_phases: 16
+  enable_notifications: true
+  retry_failed_phases: true

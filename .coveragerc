@@ -1,0 +1,13 @@
+[run]
+source = .
+omit =
+    tests/*
+    venv/*
+    .venv/*
+    */site-packages/*
+    setup.py
+
+[report]
+show_missing = true
+skip_covered = true
+fail_under = 40

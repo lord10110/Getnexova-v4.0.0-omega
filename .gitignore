@@ -1,0 +1,62 @@
+# ═══════════════════════════════════════════════
+# GetNexova .gitignore
+# ═══════════════════════════════════════════════
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Virtual environments
+venv/
+.venv/
+env/
+
+# GetNexova data (sensitive)
+knowledge.db
+data/*.db
+data/*.jsonl
+memory/store/
+ai_memory/
+
+# Logs
+logs/
+*.log
+cost.log
+
+# Reports (generated)
+reports/*.html
+reports/*.json
+reports/*.md
+reports/pocs/
+
+# Secrets & keys
+.env
+.nexova_key
+*.key
+*.pem
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker
+docker-compose.override.yml
+
+# Testing
+.coverage
+htmlcov/
+.pytest_cache/
+.mypy_cache/

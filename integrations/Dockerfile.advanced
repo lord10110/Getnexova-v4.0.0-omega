@@ -1,0 +1,60 @@
+# ════════════════════════════════════════════════════════
+# GetNexova Advanced Tools Container
+# ════════════════════════════════════════════════════════
+# Provides heavyweight security scanning tools accessible
+# via a REST API from the main GetNexova container.
+FROM python:3.12-slim
+
+LABEL maintainer="GetNexova Team"
+LABEL description="Advanced security scanning tools container"
+
+# System dependencies and security tools
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl \
+    wget \
+    git \
+    jq \
+    unzip \
+    ca-certificates \
+    nmap \
+    nikto \
+    dnsutils \
+    whois \
+    ruby \
+    ruby-dev \
+    build-essential \
+    libcurl4-openssl-dev \
+    libxml2-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Go tools
+ENV GOPATH=/root/go
+ENV PATH=$GOPATH/bin:/usr/local/go/bin:$PATH
+RUN wget -q https://go.dev/dl/go1.22.4.linux-amd64.tar.gz \
+    && tar -C /usr/local -xzf go1.22.4.linux-amd64.tar.gz \
+    && rm go1.22.4.linux-amd64.tar.gz
+
+# Go-based tools
+RUN go install github.com/gitleaks/gitleaks/v8@latest \
+    && go install -v github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest \
+    && go install -v github.com/projectdiscovery/httpx/cmd/httpx@latest \
+    && go install -v github.com/projectdiscovery/nuclei/v3/cmd/nuclei@latest
+
+# Python-based tools
+RUN pip install --no-cache-dir \
+    dnsrecon \
+    wapiti3 \
+    semgrep \
+    flask
+
+# WPScan (Ruby)
+RUN gem install wpscan 2>/dev/null || echo "WPScan install skipped"
+
+WORKDIR /app
+
+# Copy the API server
+COPY integrations/advanced_api.py .
+
+EXPOSE 5050
+
+CMD ["python", "advanced_api.py"]

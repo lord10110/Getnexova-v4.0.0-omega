@@ -1,0 +1,27 @@
+name: Scanner
+version: "1.0.0"
+description: "Executes security scanning tools, manages concurrency, parses output into normalized findings"
+role: "tool_executor"
+model_preferences: []
+skills:
+  - "tool_execution"
+  - "output_parsing"
+  - "concurrent_management"
+  - "timeout_handling"
+tools:
+  - "subfinder"
+  - "httpx"
+  - "nuclei"
+  - "dalfox"
+  - "nikto"
+  - "nmap"
+  - "wapiti"
+  - "gitleaks"
+  - "semgrep"
+  - "dnsrecon"
+  - "dnsenum"
+  - "wpscan"
+parameters:
+  max_concurrent: 3
+  default_timeout: 300
+  retry_on_failure: false

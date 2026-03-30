@@ -1,0 +1,21 @@
+name: GraphEngine
+version: "1.0.0"
+description: "Analyzes relationships between findings to discover attack chains and amplification patterns"
+role: "chain_analyst"
+model_preferences:
+  - "groq/llama-3.1-70b-versatile"
+  - "gemini/gemini-2.0-flash"
+skills:
+  - "graph_analysis"
+  - "chain_discovery"
+  - "impact_amplification"
+  - "pattern_recognition"
+tools: []
+parameters:
+  max_chain_depth: 5
+  min_chain_confidence: 0.5
+  amplification_patterns:
+    - "ssrf_to_internal"
+    - "xss_to_account_takeover"
+    - "idor_plus_info_leak"
+    - "open_redirect_to_phishing"

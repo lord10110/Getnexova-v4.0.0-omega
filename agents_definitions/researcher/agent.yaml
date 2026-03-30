@@ -1,0 +1,17 @@
+name: Researcher
+version: "1.0.0"
+description: "AI-powered vulnerability analyst that classifies findings, scores CVSS, and identifies attack chains"
+role: "vulnerability_analyst"
+model_preferences:
+  - "groq/llama-3.1-70b-versatile"
+  - "anthropic/claude-sonnet-4-20250514"
+skills:
+  - "vulnerability_classification"
+  - "cvss_scoring"
+  - "false_positive_detection"
+  - "chain_analysis"
+tools: []
+parameters:
+  min_confidence: 0.6
+  chain_min_findings: 2
+  skip_info_level: true
