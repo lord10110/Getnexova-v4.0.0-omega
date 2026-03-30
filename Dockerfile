@@ -1,6 +1,19 @@
 # ════════════════════════════════════════════════════════
-# GetNexova v4.0.0 OMEGA — Main Container
+# GetNexova v4.0.0 OMEGA — Main Container (Fixed)
 # ════════════════════════════════════════════════════════
+# Stage 1: Build Go tools
+# Stage 2: Copy to slim Python image
+# ════════════════════════════════════════════════════════
+
+# ─── Stage 1: Build Go binaries ───────────────────────
+FROM golang:1.22-bookworm AS go-builder
+
+RUN go install -v github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest
+RUN go install -v github.com/projectdiscovery/httpx/cmd/httpx@latest
+RUN go install -v github.com/projectdiscovery/nuclei/v3/cmd/nuclei@latest
+RUN go install -v github.com/hahwul/dalfox/v2@latest
+
+# ─── Stage 2: Final image ─────────────────────────────
 FROM python:3.12-slim
 
 LABEL maintainer="GetNexova Team"
@@ -17,18 +30,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Go for ProjectDiscovery tools
-ENV GOPATH=/root/go
-ENV PATH=$GOPATH/bin:/usr/local/go/bin:$PATH
-RUN wget -q https://go.dev/dl/go1.22.4.linux-amd64.tar.gz \
-    && tar -C /usr/local -xzf go1.22.4.linux-amd64.tar.gz \
-    && rm go1.22.4.linux-amd64.tar.gz
-
-# Install core recon tools
-RUN go install -v github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest \
-    && go install -v github.com/projectdiscovery/httpx/cmd/httpx@latest \
-    && go install -v github.com/projectdiscovery/nuclei/v3/cmd/nuclei@latest \
-    && go install -v github.com/hahwul/dalfox/v2@latest
+# Copy Go binaries from builder
+COPY --from=go-builder /go/bin/subfinder /usr/local/bin/
+COPY --from=go-builder /go/bin/httpx /usr/local/bin/
+COPY --from=go-builder /go/bin/nuclei /usr/local/bin/
+COPY --from=go-builder /go/bin/dalfox /usr/local/bin/
 
 # Update nuclei templates
 RUN nuclei -update-templates 2>/dev/null || true
