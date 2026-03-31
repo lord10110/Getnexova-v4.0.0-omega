@@ -1,25 +1,16 @@
 # ════════════════════════════════════════════════════════
-# GetNexova Advanced Tools Container (Fixed)
+# GetNexova Advanced Tools Container
 # ════════════════════════════════════════════════════════
-# Stage 1: Build Go tools in golang image
-# Stage 2: Copy binaries to slim Python image
+# Single-stage build: download pre-built Go tool binaries
+# directly to avoid Go toolchain version issues.
 # ════════════════════════════════════════════════════════
 
-# ─── Stage 1: Build Go binaries ───────────────────────
-FROM golang:1.22-bookworm AS go-builder
-
-RUN go install github.com/gitleaks/gitleaks/v8@latest
-RUN go install -v github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest
-RUN go install -v github.com/projectdiscovery/httpx/cmd/httpx@latest
-RUN go install -v github.com/projectdiscovery/nuclei/v3/cmd/nuclei@latest
-
-# ─── Stage 2: Final image ─────────────────────────────
 FROM python:3.12-slim
 
 LABEL maintainer="GetNexova Team"
 LABEL description="Advanced security scanning tools container"
 
-# System dependencies
+# ─── System dependencies ─────────────────────────────
 RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     wget \
@@ -34,18 +25,48 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libnet-ssleay-perl \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy Go binaries from builder stage
-COPY --from=go-builder /go/bin/gitleaks /usr/local/bin/
-COPY --from=go-builder /go/bin/subfinder /usr/local/bin/
-COPY --from=go-builder /go/bin/httpx /usr/local/bin/
-COPY --from=go-builder /go/bin/nuclei /usr/local/bin/
+# ─── Go tool versions (pinned for reproducibility) ───
+ENV GITLEAKS_VERSION=8.21.2
+ENV SUBFINDER_VERSION=2.6.7
+ENV HTTPX_VERSION=1.8.0
+ENV NUCLEI_VERSION=3.3.7
 
-# Install nikto from GitHub
+# ─── Download pre-built Go binaries ──────────────────
+# gitleaks
+RUN curl -sSfL "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz" \
+    | tar -xz -C /usr/local/bin/ gitleaks \
+    && chmod +x /usr/local/bin/gitleaks
+
+# subfinder
+RUN curl -sSfL "https://github.com/projectdiscovery/subfinder/releases/download/v${SUBFINDER_VERSION}/subfinder_${SUBFINDER_VERSION}_linux_amd64.zip" \
+    -o /tmp/subfinder.zip \
+    && unzip -o /tmp/subfinder.zip -d /tmp/subfinder \
+    && mv /tmp/subfinder/subfinder /usr/local/bin/subfinder \
+    && chmod +x /usr/local/bin/subfinder \
+    && rm -rf /tmp/subfinder /tmp/subfinder.zip
+
+# httpx
+RUN curl -sSfL "https://github.com/projectdiscovery/httpx/releases/download/v${HTTPX_VERSION}/httpx_${HTTPX_VERSION}_linux_amd64.zip" \
+    -o /tmp/httpx.zip \
+    && unzip -o /tmp/httpx.zip -d /tmp/httpx \
+    && mv /tmp/httpx/httpx /usr/local/bin/httpx \
+    && chmod +x /usr/local/bin/httpx \
+    && rm -rf /tmp/httpx /tmp/httpx.zip
+
+# nuclei
+RUN curl -sSfL "https://github.com/projectdiscovery/nuclei/releases/download/v${NUCLEI_VERSION}/nuclei_${NUCLEI_VERSION}_linux_amd64.zip" \
+    -o /tmp/nuclei.zip \
+    && unzip -o /tmp/nuclei.zip -d /tmp/nuclei \
+    && mv /tmp/nuclei/nuclei /usr/local/bin/nuclei \
+    && chmod +x /usr/local/bin/nuclei \
+    && rm -rf /tmp/nuclei /tmp/nuclei.zip
+
+# ─── Install nikto from GitHub ───────────────────────
 RUN git clone --depth 1 https://github.com/sullo/nikto.git /opt/nikto \
     && ln -s /opt/nikto/program/nikto.pl /usr/local/bin/nikto \
     && chmod +x /opt/nikto/program/nikto.pl
 
-# Python tools
+# ─── Python tools ────────────────────────────────────
 RUN pip install --no-cache-dir \
     dnsrecon \
     semgrep \
