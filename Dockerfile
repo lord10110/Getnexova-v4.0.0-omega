@@ -32,7 +32,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 # because the Python httpx package installs an "httpx" CLI
 # that would shadow the ProjectDiscovery httpx binary.
 ENV SUBFINDER_VERSION=2.6.7
-ENV HTTPX_VERSION=1.8.0
+# FIX: Changed from invalid 1.8.0 to latest stable release (1.6.9)
+ENV HTTPX_VERSION=1.6.9
 ENV NUCLEI_VERSION=3.3.7
 ENV DALFOX_VERSION=2.9.3
 
@@ -51,7 +52,9 @@ RUN curl -sSfL "https://github.com/projectdiscovery/httpx/releases/download/v${H
     && unzip -o /tmp/httpx.zip -d /tmp/httpx \
     && mv /tmp/httpx/httpx /usr/local/bin/httpx \
     && chmod +x /usr/local/bin/httpx \
-    && rm -rf /tmp/httpx /tmp/httpx.zip
+    && rm -rf /tmp/httpx /tmp/httpx.zip \
+    # Verify the binary was installed successfully
+    && test -f /usr/local/bin/httpx || (echo "ERROR: httpx binary not found after download" && exit 1)
 
 # nuclei
 RUN curl -sSfL "https://github.com/projectdiscovery/nuclei/releases/download/v${NUCLEI_VERSION}/nuclei_${NUCLEI_VERSION}_linux_amd64.zip" \
@@ -70,11 +73,4 @@ RUN curl -sSfL "https://github.com/hahwul/dalfox/releases/download/v${DALFOX_VER
 # Update nuclei templates
 RUN nuclei -update-templates 2>/dev/null || true
 
-# ─── Copy project & finalize ─────────────────────────
-COPY . .
-
-# Create required directories
-RUN mkdir -p data reports logs memory/store
-
-ENTRYPOINT ["python", "cli.py"]
-CMD ["--help"]
+# ─── Copy proj

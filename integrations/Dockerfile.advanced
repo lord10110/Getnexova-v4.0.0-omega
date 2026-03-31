@@ -23,12 +23,17 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     whois \
     perl \
     libnet-ssleay-perl \
+    ruby \
+    ruby-dev \
+    build-essential \
+    sqlmap \
     && rm -rf /var/lib/apt/lists/*
 
 # ─── Go tool versions (pinned for reproducibility) ───
 ENV GITLEAKS_VERSION=8.21.2
 ENV SUBFINDER_VERSION=2.6.7
-ENV HTTPX_VERSION=1.8.0
+# FIX: Use a valid httpx version (latest stable as of writing)
+ENV HTTPX_VERSION=1.6.9
 ENV NUCLEI_VERSION=3.3.7
 
 # ─── Download pre-built Go binaries ──────────────────
@@ -45,7 +50,7 @@ RUN curl -sSfL "https://github.com/projectdiscovery/subfinder/releases/download/
     && chmod +x /usr/local/bin/subfinder \
     && rm -rf /tmp/subfinder /tmp/subfinder.zip
 
-# httpx
+# httpx (ProjectDiscovery — overwrites the Python httpx CLI)
 RUN curl -sSfL "https://github.com/projectdiscovery/httpx/releases/download/v${HTTPX_VERSION}/httpx_${HTTPX_VERSION}_linux_amd64.zip" \
     -o /tmp/httpx.zip \
     && unzip -o /tmp/httpx.zip -d /tmp/httpx \
@@ -66,16 +71,5 @@ RUN git clone --depth 1 https://github.com/sullo/nikto.git /opt/nikto \
     && ln -s /opt/nikto/program/nikto.pl /usr/local/bin/nikto \
     && chmod +x /opt/nikto/program/nikto.pl
 
-# ─── Python tools ────────────────────────────────────
-RUN pip install --no-cache-dir \
-    dnsrecon \
-    semgrep \
-    flask
-
-WORKDIR /app
-
-COPY integrations/advanced_api.py .
-
-EXPOSE 5050
-
-CMD ["python", "advanced_api.py"]
+# ─── Install wpscan via gem ──────────────────────────
+RUN gem inst

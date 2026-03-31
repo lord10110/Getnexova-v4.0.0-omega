@@ -5,14 +5,13 @@
 #   docker compose up -d
 #   docker compose run --rm nexova -t target.com --mode deep --no-ai
 # ════════════════════════════════════════════════════════════
+# Note: The obsolete `version` attribute has been removed
+#       as it is ignored by recent Docker Compose versions.
+# ════════════════════════════════════════════════════════════
 
 networks:
   getnexova-net:
     driver: bridge
-
-volumes:
-  nexova-data:
-  nexova-reports:
 
 services:
   # ─── Main GetNexova Engine ────────────────────────────────
@@ -25,8 +24,9 @@ services:
     networks:
       - getnexova-net
     volumes:
-      - nexova-data:/app/data
-      - nexova-reports:/app/reports
+      # Bind mounts – data and reports stored directly on the host
+      - ./data:/app/data
+      - ./reports:/app/reports
       - ./logs:/app/logs
     environment:
       - GROQ_API_KEY=${GROQ_API_KEY:-}
@@ -62,19 +62,4 @@ services:
       timeout: 10s
       retries: 3
       start_period: 30s
-    restart: unless-stopped
-
-  # ─── Ollama Local LLM (Optional) ─────────────────────────
-  # Used for local AI processing if enabled.
-  ollama:
-    image: ollama/ollama:latest
-    container_name: getnexova-ollama
-    networks:
-      - getnexova-net
-    volumes:
-      - ~/.ollama:/root/.ollama
-    expose:
-      - "11434"
-    profiles:
-      - local-llm
-    restart: unless-stopped
+ 

@@ -491,8 +491,11 @@ class GetNexova:
                 print(f"║  {icons.get(sev,' ')} {sev.upper():<16s} {c:<40d}║")
         print(f"""╠──────────────────────────────────────────────────────────╣
 ║  AI Cost:      ${r.ai_cost:<41.4f}║
-╠──────────────────────────────────────────────────────────╣""")
-        for fmt, path in r.report_paths.items():
-            p = path if len(path) < 50 else "..." + path[-47:]
-            print(f"║  📄 {fmt.upper():<8s} {p:<47s}║")
-        print(f"╚══════════════════════════════════════════════════════════╝")
+╚══════════════════════════════════════════════════════════╝""")
+
+        # Print report files separately (full paths)
+        if r.report_paths:
+            print("\n📄 Report files:")
+            for fmt, path in r.report_paths.items():
+                print(f"   {fmt.upper():8} : {path}")
+        print()                                                                                                                                

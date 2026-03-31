@@ -210,17 +210,23 @@ class ScannerAgent:
             )
             return
 
-        # httpx reads the subdomain file directly
+        # --- MODIFIED: Add concurrency, request timeout, retries ---
         cmd = [
             "httpx", "-l", self.ctx.subdomain_file,
             "-silent", "-json",
             "-o", self.ctx.live_hosts_json,
-            "-td",  # tech detection
+            "-td",                     # tech detection
+            "-c", "100",               # concurrent threads (default 25)
+            "-timeout", "10",          # per‑request timeout (seconds)
+            "-retries", "1",           # retry once if failed
         ]
+        # ------------------------------------------------------------
+
         if self.auth and self.auth.is_configured:
             cmd = self.auth.inject_into_command(cmd, "httpx")
 
-        output = await self._exec(cmd, "httpx")
+        # --- MODIFIED: Increase process timeout to 600 seconds (10 min) ---
+        output = await self._exec(cmd, "httpx", timeout=600)
 
         # Parse httpx JSON output for live hosts, URLs, and technologies
         live_hosts = []
@@ -563,16 +569,4 @@ class ScannerAgent:
                     severity="medium" if "OSVDB" in str(vuln) else "low",
                     confidence=0.6,
                     evidence=vuln.get("msg", ""),
-                    url=vuln.get("url", host),
-                ))
-        except json.JSONDecodeError:
-            pass
-        return findings
-
-    def get_findings_summary(self) -> Dict[str, int]:
-        summary = {"critical": 0, "high": 0, "medium": 0, "low": 0, "info": 0}
-        for f in self.ctx.all_findings:
-            s = f.severity.lower()
-            if s in summary:
-                summary[s] += 1
-        return summary
+                    url=vuln
